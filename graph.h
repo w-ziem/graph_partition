@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifndef GRAPH_H
 #define GRAPH_H
@@ -17,7 +18,7 @@ typedef struct {
     int *vertices; //indeksy wierzchołków pogrupowane wierszami (w macierzy)
     int *edgeOffsets; //wskaźniki, gdzie zaczyna się wiersz
     int *adjacency; //lista sąsiadów
-    int *edgeIndices //lista wskaźników na grupy sąsiadów
+    int *edgeIndices; //lista wskaźników na grupy sąsiadów
 } csrrg_t;
 
 
@@ -30,8 +31,6 @@ graph_t* load_graph_from_csrrg(csrrg_t data);
 // Funkcja do zwalniania pamięci zajmowanej przez graf
 void freeGraph(graph_t *graph);
 
-// Funkcja wczytująca dane z pliku do struktury, aby nie otwierać pliu za każdym razem
-csrrg_t *parse_csrrg(const char *filename);
 
 // Funkcja wczytująca z danych wejściowych macierz odpowiadającą grafowi
 graph_matrix load_matrix_from_CSRRG(csrrg_t data);

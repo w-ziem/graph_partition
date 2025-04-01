@@ -1,111 +1,25 @@
 #include "graph.h"
-
+#include "error_handling.h"
 
 
 int EDGES = 0;
 graph_t *create_graph(int vertices, int edges) {
     graph_t *graph = (graph_t *)malloc(sizeof(graph_t));
     if (!graph) {
-        perror("Błąd alokacji pamięci dla grafu");
-        return NULL;
+        handle_memory_error(graph,"Błąd alokacji pamięci dla grafu");
+        
     }
     graph->vertices = vertices;
     graph->adjacency = (int *)malloc(edges * sizeof(int));
     graph->edgeIndices = (int *)malloc((vertices + 1) * sizeof(int));
     
     if (!graph->adjacency || !graph->edgeIndices) {
-        perror("Błąd alokacji pamięci dla struktury grafu");
-        freeGraph(graph);
-        return NULL;
+        handle_memory_error(graph,"Błąd alokacji pamięci dla struktury grafu");
     }
     return graph;
 }
 
 
-csrrg_t *parse_csrrg(const char *filename) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        perror("Błąd otwarcia pliku");
-        return NULL;
-    }
-
-
-    csrrg_t *csrrg = (csrrg_t *)malloc(sizeof(csrrg_t));
-    if (!csrrg) {
-        perror("Błąd alokacji pamięci dla CSRRG");
-        fclose(file);
-        return NULL;
-    }
-
-    //wczytywanie pierwszego wiersza
-    if (fscanf(file, "%d", &csrrg->maxVertices) != 1) {
-        perror("Błąd odczytu maksymalnej liczby węzłów w wierszu");
-        free(csrrg);
-        fclose(file);
-        return NULL;
-    }
-
-    //wczytywanie
-    if (fscanf(file, "%d", &csrrg->vertices) != 1) {
-        perror("Błąd odczytu liczby wierzchołków pogrupowanych wierszami");
-        free(csrrg);
-        fclose(file);
-        return NULL;
-    }
-
-    csrrg->edgeOffsets = (int *)malloc((csrrg->maxVertices + 1) * sizeof(int));
-    csrrg->adjacency = (int *)malloc(csrrg->maxVertices * sizeof(int));
-    csrrg->edgeIndices = (int *)malloc((csrrg->maxVertices + 1) * sizeof(int));
-
-    if (!csrrg->edgeOffsets || !csrrg->adjacency || !csrrg->edgeIndices) {
-        perror("Błąd alokacji pamięci dla CSRRG");
-        free(csrrg->edgeOffsets);
-        free(csrrg->adjacency);
-        free(csrrg->edgeIndices);
-        free(csrrg);
-        fclose(file);
-        return NULL;
-    }
-
-    for (int i = 0; i <= csrrg->maxVertices; i++) {
-        if (fscanf(file, "%d", &csrrg->edgeOffsets[i]) != 1) {
-            perror("Błąd odczytu edgeOffsets");
-            free(csrrg->edgeOffsets);
-            free(csrrg->adjacency);
-            free(csrrg->edgeIndices);
-            free(csrrg);
-            fclose(file);
-            return NULL;
-        } else EDGES++;
-    }
-
-    for (int i = 0; i < csrrg->vertices; i++) {
-        if (fscanf(file, "%d", &csrrg->adjacency[i]) != 1) {
-            perror("Błąd odczytu adjacency");
-            free(csrrg->edgeOffsets);
-            free(csrrg->adjacency);
-            free(csrrg->edgeIndices);
-            free(csrrg);
-            fclose(file);
-            return NULL;
-        }
-    }
-
-    for (int i = 0; i <= csrrg->vertices; i++) {
-        if (fscanf(file, "%d", &csrrg->edgeIndices[i]) != 1) {
-            perror("Błąd odczytu edgeIndices");
-            free(csrrg->edgeOffsets);
-            free(csrrg->adjacency);
-            free(csrrg->edgeIndices);
-            free(csrrg);
-            fclose(file);
-            return NULL;
-        }
-    }
-
-    fclose(file);
-    return csrrg;
-}
 
 
 graph_t* load_graph_from_csrrg(const csrrg_t data) {
@@ -126,8 +40,7 @@ graph_matrix load_matrix_from_CSRRG(const csrrg_t data) {
     //alokowanie pamięci dal wierszy
     matrix = (int **)malloc(data.maxVertices * sizeof(int *));
     if (!matrix) {
-        perror("Błąd alokacji pamięci dla macierzy grafu");
-        return matrix;
+        handle_memory_error(matrix,"Błąd alokacji pamięci dla macierzy grafu");
     }
 
 
@@ -135,13 +48,14 @@ graph_matrix load_matrix_from_CSRRG(const csrrg_t data) {
     for (int i = 0; i < data.maxVertices; i++) {
         matrix[i] = (int *)calloc(data.maxVertices, sizeof(int));
         if (!matrix[i]) {
-            perror("Błąd alokacji pamięci dla wiersza macierzy grafu");
             for (int j = 0; j < i; j++) {
                 free(matrix[j]);
             }
             free(matrix);
-            return matrix;
+            return NULL;
         }
+        handle_memory_error(matrix,"Błąd alokacji pamięci dla wiersza macierzy grafu");
+            
     }
 
     // Wypełnienie macierzy zerami
