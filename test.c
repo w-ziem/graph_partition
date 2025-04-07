@@ -20,8 +20,33 @@ void test_load_graph_from_csrrg(const char *filename) {
     }
     
     printf("Graph loaded with %d vertices.\n", graph->vertices);
-    
 
+    printf("Generated graph\n");
+    printf("vertices: %d\n", graph->vertices);
+
+    printf("adjacency: ");
+    for (int i = 0; i < 248; i++) {
+        printf("%d", data->adjacency[i]);
+        if (i < 248) {
+            printf(", ");
+        }
+    }
+    printf("\n");
+    
+    printf("\n");
+    printf("%ld\n", sizeof(data->edgeIndices));
+    printf("\n");
+    printf("edgeIndices: ");
+    for (int i = 0; i < 72; i++) { // Assuming edgeIndices size is maxVertices + 1
+        printf("%d", data->edgeIndices[i]);
+        if (i < 72) {
+            printf(", ");
+        }
+    }
+    printf("\n");
+
+    free(data->adjacency);
+    free(data->edgeIndices);
 }
 
 void test_load_matrix_from_csrrg(const char *filename) {
