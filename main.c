@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Konwersja CSRRG na wewnętrzną strukturę grafu
-    graph_t *graph = load_graph_from_csrrg(*graph_data);
+    graph_t *graph = load_graph_from_csrrg(graph_data);
     if (!graph) {
         fprintf(stderr, "Błąd konwersji grafu!\n");
         return EXIT_FAILURE;
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
     // Zwolnienie pamięci
     free(partition.partition);
-    freeGraph(graph);
+    free_graph(graph);
     free(graph_data->edgeOffsets);
     free(graph_data->adjacency);
     free(graph_data->edgeIndices);

@@ -23,21 +23,19 @@ typedef struct {
 
 
 // Funkcja do inicjalizacji pustego grafu
-graph_t* createGraph(int vertices, int edges);
+graph_t* create_graph(int vertices, int edges);
 
 // Funkcja do wczytywania grafu z pliku w formacie CSRRG
-graph_t* load_graph_from_csrrg(csrrg_t data);
+graph_t* load_graph_from_csrrg(const csrrg_t* data);
 
 // Funkcja do zwalniania pamięci zajmowanej przez graf
-void freeGraph(graph_t *graph);
+void free_graph(graph_t *graph);
 
 
 // Funkcja wczytująca z danych wejściowych macierz odpowiadającą grafowi
-graph_matrix load_matrix_from_CSRRG(csrrg_t data);
+graph_matrix load_matrix_from_csrrg(const csrrg_t* data);
 
 
-// Funkcja zwalniająca pamięć zajmowaną przez graf
-void freeGraph(graph_t *graph);
 
 
 #endif

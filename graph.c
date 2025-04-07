@@ -22,54 +22,63 @@ graph_t *create_graph(int vertices, int edges) {
 
 
 
-graph_t* load_graph_from_csrrg(const csrrg_t data) {
-    graph_t *graph = create_graph(data.maxVertices, EDGES);
+graph_t* load_graph_from_csrrg(const csrrg_t* data) {
+    graph_t *graph = create_graph(data->maxVertices, EDGES);
     if (!graph) {
         return NULL;
     }
-    graph->vertices = data.maxVertices;
-    memcpy(graph->adjacency, data.adjacency, data.maxVertices* sizeof(int));
-    memcpy(graph->edgeIndices, data.edgeIndices, (data.maxVertices + 1) * sizeof(int));
+    graph->vertices = data->maxVertices;
+    memcpy(graph->adjacency, data->adjacency, data->maxVertices* sizeof(int));
+    memcpy(graph->edgeIndices, data->edgeIndices, (data->maxVertices + 1) * sizeof(int));
     return graph;
 }
 
 
-graph_matrix load_matrix_from_CSRRG(const csrrg_t data) {
+graph_matrix load_matrix_from_csrrg(const csrrg_t* data) {
     graph_matrix matrix;
 
     //alokowanie pamięci dal wierszy
-    matrix = (int **)malloc(data.maxVertices * sizeof(int *));
+    matrix = (int **)malloc(data->maxVertices * sizeof(int *));
     if (!matrix) {
         handle_memory_error(matrix,"Błąd alokacji pamięci dla macierzy grafu");
     }
 
 
     //alokowanie pamięci dla kolumn
-    for (int i = 0; i < data.maxVertices; i++) {
-        matrix[i] = (int *)calloc(data.maxVertices, sizeof(int));
+    for (int i = 0; i < data->maxVertices; i++) {
+        matrix[i] = (int *)malloc(data->maxVertices * sizeof(int));
         if (!matrix[i]) {
             for (int j = 0; j < i; j++) {
                 free(matrix[j]);
             }
             free(matrix);
-            return NULL;
+            handle_memory_error(matrix,"Błąd alokacji pamięci dla wiersza macierzy grafu");
         }
-        handle_memory_error(matrix,"Błąd alokacji pamięci dla wiersza macierzy grafu");
             
     }
 
     // Wypełnienie macierzy zerami
-    for (int i = 0; i < data.maxVertices; i++) {
-        for (int j = 0; j < data.maxVertices; j++) {
+    for (int i = 0; i < data->maxVertices; i++) {
+        for (int j = 0; j < data->maxVertices; j++) {
             matrix[i][j] = 0;
         }
     }
 
+
+    // Wstawianie wierzchołków
     int col;
-    for(int row = 0 ; row < data.maxVertices; row++){
-        for(int i = data.edgeIndices[row]; i < data.edgeIndices[row++]; i++){
-            col = data.vertices[i];
+    for (int row = 0; row < data->maxVertices; row++) {
+        int start = data->edgeOffsets[row];
+        int end = data->edgeOffsets[row + 1];
+    
+        for (int i = start; i < end; i++) {
+            col = data->vertices[i];
             matrix[row][col] = 1;
+        }
+        
+        printf("Row %d: start=%d, end=%d\n", row, start, end);
+        for (int i = start; i < end; i++) {
+            printf("  Setting matrix[%d][%d] = 1\n", row, data->vertices[i]);
         }
     }
 
@@ -78,7 +87,7 @@ graph_matrix load_matrix_from_CSRRG(const csrrg_t data) {
 
 
 
-void freeGraph(graph_t *graph) {
+void free_graph(graph_t *graph) {
     if (graph) {
         free(graph->adjacency);
         free(graph->edgeIndices);

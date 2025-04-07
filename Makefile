@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS =  -Wall -Wextra -O2 
+CFLAGS =  -Wall -Wextra -O2 -lm
 
 SRC = graph.c error_handling.c io.c partition.c main.c
 OBJ = $(SRC:.c=.o)

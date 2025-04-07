@@ -1,53 +1,109 @@
 #include "io.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "error_handling.h"
+#define BUFSIZE 1024
 
 // Funkcja wczytująca graf z pliku
 csrrg_t* parse_csrrg(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
-       handle_file_error(file,"Błąd otwarcia pliku");
+        handle_file_error(file, "Błąd otwarcia pliku");
     }
 
     csrrg_t *csrrg = (csrrg_t *)malloc(sizeof(csrrg_t));
     if (!csrrg) {
-        handle_memory_error(csrrg,"Błąd alokacji pamięci dla CSRRG");
+        handle_memory_error(csrrg, "Błąd alokacji pamięci dla CSRRG");
+    }
+    
+    //odczytywanie pierwszej linii
+    if(fscanf(file, "%d\n", &csrrg->maxVertices) != 1){
+        handle_data_read_error(csrrg, "Bład wczytywania pierwszej linii CSRRG");
     }
 
-    if (fscanf(file, "%d", &csrrg->maxVertices) != 1) {
-        handle_data_read_error(csrrg, "Błąd odczytu maksymalnej liczby węzłów");
+    
+    //odczyt drugiej linii
+    char buf[BUFSIZE];
+    if(!fgets(buf, BUFSIZE, file)){
+        handle_data_read_error(csrrg, "Błąd wczytywania linii");
     }
 
-    if (fscanf(file, "%d", &csrrg->vertices) != 1) {
-        handle_data_read_error(csrrg,"Błąd odczytu liczby wierzchołków");
+    //ustalanie długości linii
+    int count = 1;
+    for (char *p = buf; *p; p++) {
+        if (*p == ';') count++;
     }
-
-    csrrg->edgeOffsets = (int *)malloc((csrrg->maxVertices + 1) * sizeof(int));
-    csrrg->adjacency = (int *)malloc(csrrg->maxVertices * sizeof(int));
-    csrrg->edgeIndices = (int *)malloc((csrrg->maxVertices + 1) * sizeof(int));
-
-    if (!csrrg->edgeOffsets || !csrrg->adjacency || !csrrg->edgeIndices) {
-        handle_memory_error(csrrg,"Błąd alokacji pamięci dla CSRRG");
-    }
-
-    for (int i = 0; i <= csrrg->maxVertices; i++) {
-        if (fscanf(file, "%d", &csrrg->edgeOffsets[i]) != 1) {
-            handle_data_read_error(csrrg, "Błąd odczytu edgeOffsets");
+    csrrg->vertices = malloc(count * sizeof(int));
+    char *token = strtok(buf, ";\n");
+    int j = 0;
+    while (token) {
+            csrrg->vertices[j++] = atoi(token);
+            token = strtok(NULL, ";\n");
         }
+    printf("Wczytano %d elemetów do verticies (2 linia)\n", count);
+    
+
+    //odczyt trzeciej linii
+    if(!fgets(buf, BUFSIZE, file)){
+        handle_data_read_error(csrrg, "Błąd wczytywania linii");
     }
 
-    for (int i = 0; i < csrrg->vertices; i++) {
-        if (fscanf(file, "%d", &csrrg->adjacency[i]) != 1) {
-            handle_data_read_error(csrrg,"Błąd odczytu adjacency");
+    //ustalanie długości linii
+    count = 1;
+    for (char *p = buf; *p; p++) {
+        if (*p == ';') count++;
+    }
+    csrrg->edgeOffsets = malloc(count * sizeof(int));
+    token = strtok(buf, ";\n");
+     j = 0;
+    while (token) {
+            csrrg->edgeOffsets[j++] = atoi(token);
+            token = strtok(NULL, ";\n");
         }
+    printf("Wczytano %d elemetów do edgeOffsets (3 linia)\n", count);
+    
+
+
+    //odczyt czwartej linii
+    if(!fgets(buf, BUFSIZE, file)){
+        handle_data_read_error(csrrg, "Błąd wczytywania linii");
     }
 
-    for (int i = 0; i <= csrrg->vertices; i++) {
-        if (fscanf(file, "%d", &csrrg->edgeIndices[i]) != 1) {
-            handle_data_read_error(csrrg,"Błąd odczytu edgeIndices");
-        }
+    //ustalanie długości linii
+    count = 1;
+    for (char *p = buf; *p; p++) {
+        if (*p == ';') count++;
     }
+    csrrg->adjacency = malloc(count * sizeof(int));
+    token = strtok(buf, ";\n");
+        j = 0;
+    while (token) {
+            csrrg->adjacency[j++] = atoi(token);
+            token = strtok(NULL, ";\n");
+        }
+    printf("Wczytano %d elemetów do adjacency (4 linia)\n", count);
+
+
+
+    //odczyt piątej linii
+    if(!fgets(buf, BUFSIZE, file)){
+        handle_data_read_error(csrrg, "Błąd wczytywania linii");
+    }
+
+    //ustalanie długości linii
+    count = 1;
+    for (char *p = buf; *p; p++) {
+        if (*p == ';') count++;
+    }
+    csrrg->edgeIndices = malloc(count * sizeof(int));
+    token = strtok(buf, ";\n");
+        j = 0;
+    while (token) {
+            csrrg->edgeIndices[j++] = atoi(token);
+            token = strtok(NULL, ";\n");
+        }
+    printf("Wczytano %d elemetów do edgeIndices (5 linia)\n", count);
 
     fclose(file);
     return csrrg;
