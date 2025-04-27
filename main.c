@@ -26,6 +26,9 @@ int main(int argc, char *argv[]) {
 
     // Podział grafu metodą spektralną
     partition_t partition = spectral_partition(graph);
+    
+    evaluate_partition(graph, partition, 10);
+
 
     // Zapisanie wyniku podziału do pliku
     save_partition_to_file("wynik_podzialu.txt", partition, graph->vertices);
@@ -33,6 +36,7 @@ int main(int argc, char *argv[]) {
     // Zwolnienie pamięci
     free(partition.partition);
     free_graph(graph);
+    free(graph_data->vertices); 
     free(graph_data->edgeOffsets);
     free(graph_data->adjacency);
     free(graph_data->edgeIndices);

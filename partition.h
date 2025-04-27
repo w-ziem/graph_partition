@@ -18,4 +18,8 @@ double* compute_fiedler_vector(double **laplacian, int vertices);
 // Funkcja dzieląca graf na dwie części na podstawie wektora Fiedlera
 partition_t spectral_partition(graph_t *graph);
 
+// Funkcja oceniająca podział grafu
+void evaluate_partition(graph_t *graph, partition_t partition, double margin);
+
+
 #endif // PARTITION_H
