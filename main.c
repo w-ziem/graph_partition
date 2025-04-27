@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Błąd wczytywania grafu!\n");
         return EXIT_FAILURE;
     }
-
+    printf("wczytano z pliku!!");
     // Konwersja CSRRG na wewnętrzną strukturę grafu
     graph_t *graph = load_graph_from_csrrg(graph_data);
     if (!graph) {

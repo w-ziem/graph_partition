@@ -36,17 +36,24 @@ graph_t* load_graph_from_csrrg(const csrrg_t* data) {
 
 graph_matrix load_matrix_from_csrrg(const csrrg_t* data) {
     graph_matrix matrix;
+    if (!data->edgeOffsets) {
+        fprintf(stderr, "edgeOffsets to NULL\n");
+        exit(EXIT_FAILURE);
+    }
 
     //alokowanie pamięci dal wierszy
     matrix = (int **)malloc(data->maxVertices * sizeof(int *));
+    printf("Zaalokowalem pamiec dla wierszy!! \n");
     if (!matrix) {
         handle_memory_error(matrix,"Błąd alokacji pamięci dla macierzy grafu");
     }
 
 
     //alokowanie pamięci dla kolumn
+    printf("Zaczynam alokować pamięć dla kolumn... \n");
     for (int i = 0; i < data->maxVertices; i++) {
         matrix[i] = (int *)malloc(data->maxVertices * sizeof(int));
+        printf("Zaalokowalem: %d kolumne\n",i);
         if (!matrix[i]) {
             for (int j = 0; j < i; j++) {
                 free(matrix[j]);
@@ -56,7 +63,7 @@ graph_matrix load_matrix_from_csrrg(const csrrg_t* data) {
         }
             
     }
-
+    printf("Zaalokowalem pamiec dla kolumn!! \n");
     // Wypełnienie macierzy zerami
     for (int i = 0; i < data->maxVertices; i++) {
         for (int j = 0; j < data->maxVertices; j++) {
@@ -69,11 +76,30 @@ graph_matrix load_matrix_from_csrrg(const csrrg_t* data) {
     int col;
     for (int row = 0; row < data->maxVertices; row++) {
         int start = data->edgeOffsets[row];
-        int end = data->edgeOffsets[row + 1];
+        if (row + 1 >= data->maxVertices + 1) {
+            fprintf(stderr, "Błąd: row+1 poza zakresem edgeOffsets (row=%d)\n", row);
+            break;
+        }
+        int end;
+        if (row + 1 >= data->maxVertices + 1) {
+            fprintf(stderr, "Błąd: edgeOffsets[%d] poza zakresem (max=%d)\n", row + 1, data->maxVertices);
+            end = data->edgeOffsets[row];  // zapobiega wyjściu poza zakres
+        } else {
+            end = data->edgeOffsets[row + 1];
+        }
     
         for (int i = start; i < end; i++) {
+            if(col >= data->maxVertices) {
+                fprintf(stderr, "Błąd: col=%d przekracza maxVertices=%d\n", col, data->maxVertices);
+                continue;
+            }
             col = data->vertices[i];
-            matrix[row][col] = 1;
+            printf("Obecny wiersz: %d , kolumna: %d \n",row,col);
+            if (col < 0 || col >= data->maxVertices) {
+                fprintf(stderr, "Błąd: niepoprawny indeks col=%d przy row=%d (max=%d)\n", col, row, data->maxVertices - 1);
+            } else {
+                matrix[row][col] = 1;
+            }
         }
         
         printf("Row %d: start=%d, end=%d\n", row, start, end);

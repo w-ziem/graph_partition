@@ -49,30 +49,31 @@ void test_load_graph_from_csrrg(const char *filename) {
     free(data->edgeIndices);
 }
 
-void test_load_matrix_from_csrrg(const char *filename) {
-    csrrg_t* data = parse_csrrg(filename);
-    if (data->adjacency == NULL || data->edgeIndices == NULL) {
-        printf("Failed to parse CSRRG file: %s\n", filename);
+void test_load_matrix_from_csrrg(const char *Filename) {
+    printf("Rozpoczynam wczytywanie macierzy z csrrg \n");
+    csrrg_t* data1 = parse_csrrg(Filename);
+    if (data1->adjacency == NULL || data1->edgeIndices == NULL) {
+        printf("Failed to parse CSRRG file: %s\n", Filename);
         return;
     }
-
-    graph_matrix matrix = load_matrix_from_csrrg(data);
+    printf("Parse csrrg sie udalo \n");
+    graph_matrix matrix = load_matrix_from_csrrg(data1);
     if (matrix == NULL) {
         printf("Failed to load matrix from CSR representation.\n");
-        free(data->adjacency);
-        free(data->edgeIndices);
+        free(data1->adjacency);
+        free(data1->edgeIndices);
         return;
     }
     
     printf("Matrix loaded:\n");
-    for (int i = 0; i < data->maxVertices; i++) {
-        for (int j = 0; j < data->maxVertices; j++) {
+    for (int i = 0; i < data1->maxVertices; i++) {
+        for (int j = 0; j < data1->maxVertices; j++) {
             printf("%d ", matrix[i][j]);
         }
         printf("\n");
     }
 
-    for (int i = 0; i < data->maxVertices; i++) {
+    for (int i = 0; i < data1->maxVertices; i++) {
         free(matrix[i]);
     }
 

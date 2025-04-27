@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "error_handling.h"
-#define BUFSIZE 1024
+#define BUFSIZE 4096
 
 // Funkcja wczytująca graf z pliku
 csrrg_t* parse_csrrg(const char *filename) {
@@ -21,7 +21,7 @@ csrrg_t* parse_csrrg(const char *filename) {
     if(fscanf(file, "%d\n", &csrrg->maxVertices) != 1){
         handle_data_read_error(csrrg, "Bład wczytywania pierwszej linii CSRRG");
     }
-
+    int expected_edgeOffsets = csrrg->maxVertices + 1; // CSR: N+1 offsetów
     
     //odczyt drugiej linii
     char buf[BUFSIZE];
@@ -53,6 +53,9 @@ csrrg_t* parse_csrrg(const char *filename) {
     count = 1;
     for (char *p = buf; *p; p++) {
         if (*p == ';') count++;
+    }
+    if (count < expected_edgeOffsets) {
+        handle_data_read_error(csrrg, "Za mało elementów w edgeOffsets – wymagane maxVertices + 1");
     }
     csrrg->edgeOffsets = malloc(count * sizeof(int));
     token = strtok(buf, ";\n");
