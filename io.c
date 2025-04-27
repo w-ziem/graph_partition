@@ -41,7 +41,6 @@ csrrg_t* parse_csrrg(const char *filename) {
             csrrg->vertices[j++] = atoi(token);
             token = strtok(NULL, ";\n");
         }
-    printf("Wczytano %d elemetów do verticies (2 linia)\n", count);
     
 
     //odczyt trzeciej linii
@@ -61,7 +60,6 @@ csrrg_t* parse_csrrg(const char *filename) {
             csrrg->edgeOffsets[j++] = atoi(token);
             token = strtok(NULL, ";\n");
         }
-    printf("Wczytano %d elemetów do edgeOffsets (3 linia)\n", count);
     
 
 
@@ -82,7 +80,6 @@ csrrg_t* parse_csrrg(const char *filename) {
             csrrg->adjacency[j++] = atoi(token);
             token = strtok(NULL, ";\n");
         }
-    printf("Wczytano %d elemetów do adjacency (4 linia)\n", count);
 
 
 
@@ -103,7 +100,6 @@ csrrg_t* parse_csrrg(const char *filename) {
             csrrg->edgeIndices[j++] = atoi(token);
             token = strtok(NULL, ";\n");
         }
-    printf("Wczytano %d elemetów do edgeIndices (5 linia)\n", count);
 
     fclose(file);
     return csrrg;

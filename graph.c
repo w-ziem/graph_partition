@@ -2,7 +2,6 @@
 #include "error_handling.h"
 
 
-int EDGES = 0;
 graph_t *create_graph(int vertices, int edges) {
     graph_t *graph = (graph_t *)malloc(sizeof(graph_t));
     if (!graph) {
@@ -23,12 +22,14 @@ graph_t *create_graph(int vertices, int edges) {
 
 
 graph_t* load_graph_from_csrrg(const csrrg_t* data) {
-    graph_t *graph = create_graph(data->maxVertices, EDGES);
+    int edges = data->edgeOffsets[data->maxVertices - 1];
+
+    graph_t *graph = create_graph(data->maxVertices, edges);
     if (!graph) {
         return NULL;
     }
     graph->vertices = data->maxVertices;
-    memcpy(graph->adjacency, data->adjacency, data->maxVertices* sizeof(int));
+    memcpy(graph->adjacency, data->adjacency, edges* sizeof(int));
     memcpy(graph->edgeIndices, data->edgeIndices, (data->maxVertices + 1) * sizeof(int));
     return graph;
 }
@@ -75,11 +76,7 @@ graph_matrix load_matrix_from_csrrg(const csrrg_t* data) {
             col = data->vertices[i];
             matrix[row][col] = 1;
         }
-        
-        printf("Row %d: start=%d, end=%d\n", row, start, end);
-        for (int i = start; i < end; i++) {
-            printf("  Setting matrix[%d][%d] = 1\n", row, data->vertices[i]);
-        }
+    
     }
 
     return matrix;

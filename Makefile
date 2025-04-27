@@ -8,10 +8,10 @@ EXEC = graph_partition
 all: $(EXEC)
 
 $(EXEC): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lm
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ -lm -g
 
 clean:
 	rm -f $(OBJ) $(EXEC)
