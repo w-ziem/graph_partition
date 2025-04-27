@@ -6,6 +6,7 @@
 // Funkcja obliczająca macierz Laplace'a grafu
 void compute_laplacian(graph_t *graph, double **laplacian) {
     int V = graph->vertices;
+    printf("V w funkcji compute_laplacian z graph->vertices: %d\n", V);
     int *degree = (int *)calloc(V, sizeof(int));
 
     if (!degree) {
@@ -28,14 +29,16 @@ void compute_laplacian(graph_t *graph, double **laplacian) {
     }
 
     // Tworzenie macierzy Laplace'a
+    printf("Jestem przed pętlą, adjacencyCount mamy taki: %d\n", graph->adjacencyCount);
     for (int i = 0; i < V; i++) {
         laplacian[i][i] = degree[i];
         for (int j = graph->edgeIndices[i]; j < graph->edgeIndices[i + 1]; j++) {
+            if(j == graph->adjacencyCount) return;
             int neighbor = graph->adjacency[j];
             laplacian[i][neighbor] = -1.0;
         }
     }
-    free(degree);
+    // free(degree);
 }
 
 // Funkcja obliczająca iloczyn macierzy przez wektor
@@ -207,7 +210,7 @@ partition_t spectral_partition(graph_t *graph) {
             exit(1);
         }
     }
-    
+
     // Compute Laplacian matrix
     compute_laplacian(graph, laplacian);
     
@@ -231,10 +234,10 @@ partition_t spectral_partition(graph_t *graph) {
     }
     
     // Cleanup
-    free(fiedler);
-    for (int i = 0; i < V; i++) {
-        free(laplacian[i]);
-    }
+    // free(fiedler);
+    // for (int i = 0; i < V; i++) {
+    //     free(laplacian[i]);
+    // }
     free(laplacian);
     
     return partition;

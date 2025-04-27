@@ -2,15 +2,15 @@
 #include "error_handling.h"
 
 
-graph_t *create_graph(int vertices, int edges) {
+graph_t *create_graph(int verticesCount, int edgeIndicesCount, int adjacencyCount) {
     graph_t *graph = (graph_t *)malloc(sizeof(graph_t));
     if (!graph) {
         handle_memory_error(graph,"Błąd alokacji pamięci dla grafu");
         
     }
-    graph->vertices = vertices;
-    graph->adjacency = (int *)malloc(edges * sizeof(int));
-    graph->edgeIndices = (int *)malloc((vertices + 1) * sizeof(int));
+    graph->vertices = verticesCount;
+    graph->adjacency = (int *)malloc(adjacencyCount * sizeof(int));
+    graph->edgeIndices = (int *)malloc((edgeIndicesCount) * sizeof(int));
     
     if (!graph->adjacency || !graph->edgeIndices) {
         handle_memory_error(graph,"Błąd alokacji pamięci dla struktury grafu");
@@ -22,15 +22,15 @@ graph_t *create_graph(int vertices, int edges) {
 
 
 graph_t* load_graph_from_csrrg(const csrrg_t* data) {
-    int edges = data->edgeOffsets[data->maxVertices - 1];
-
-    graph_t *graph = create_graph(data->maxVertices, edges);
+    graph_t *graph = create_graph(data->verticesCount, data->edgeIndicesCount, data->adjacencyCount);
     if (!graph) {
         return NULL;
     }
-    graph->vertices = data->maxVertices;
-    memcpy(graph->adjacency, data->adjacency, edges* sizeof(int));
-    memcpy(graph->edgeIndices, data->edgeIndices, (data->maxVertices + 1) * sizeof(int));
+
+    graph->vertices = data->verticesCount;
+    graph->adjacencyCount = data->adjacencyCount;
+    memcpy(graph->adjacency, data->adjacency, data->adjacencyCount * sizeof(int));
+    memcpy(graph->edgeIndices, data->edgeIndices, (data->edgeIndicesCount) * sizeof(int));
     return graph;
 }
 
