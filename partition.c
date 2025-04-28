@@ -215,12 +215,16 @@ void evaluate_partition(graph_t *graph, partition_t partition, double margin) {
             return;
         }
         partVertices[part]++;
-
+        if (i + 1 >= V || graph->edgeIndices[i] < 0) {
+            continue;
+        }
         // Liczenie przeciętych krawędzi
-        for (int j = graph->edgeIndices[i]; j < graph->edgeIndices[i + 1]; j++) {
+        for (int j = graph->edgeIndices[i]; j < graph->edgeIndices[i + 1] && j < graph->adjacencyCount; j++) {
             int neighbor = graph->adjacency[j];
-            if (partition.partition[i] != partition.partition[neighbor]) {
-                cutEdges++;
+            if (neighbor >= 0 && neighbor < V) {
+                if (partition.partition[i] != partition.partition[neighbor]) {
+                    cutEdges++;
+                }
             }
         }
     }

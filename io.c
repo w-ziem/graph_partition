@@ -1,6 +1,7 @@
 #include "io.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include "error_handling.h"
 #define BUFSIZE 99999
