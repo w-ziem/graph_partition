@@ -7,65 +7,72 @@
 #include "io.h"
 
 int main(int argc, char *argv[]) {
+    // Zmienne konfiguracyjne programu
     char *input_file = NULL;
-    char *output_base = "wynik_podzialu";  // Domyślna nazwa pliku wyjściowego
-    int numParts = 2;
-    int margin = 10;
-    int save_binary = 0;
+    char *output_base = "wynik_podzialu";  // Domyślna nazwa pliku wyjściowego (bez rozszerzenia)
+    int numParts = 2;                      // Domyślna liczba podgrafów
+    int margin = 10;                       // Domyślny margines procentowy
+    int save_binary = 0;                   // Flaga zapisu pliku binarnego
 
+    // Parsowanie argumentów linii poleceń
     int opt;
     while ((opt = getopt(argc, argv, "i:p:m:o:b")) != -1) {
         switch (opt) {
-            case 'i':
+            case 'i':  // Plik wejściowy
                 input_file = optarg;
                 break;
-            case 'p':
+            case 'p':  // Liczba podgrafów
                 numParts = atoi(optarg);
                 if (numParts <= 0) {
                     fprintf(stderr, "Liczba podgrafów musi być dodatnia\n");
                     return EXIT_FAILURE;
                 }
                 break;
-            case 'm':
+            case 'm':  // Margines procentowy
                 margin = atoi(optarg);
                 if (margin < 0 || margin > 100) {
                     fprintf(stderr, "Margines musi być w zakresie 0-100\n");
                     return EXIT_FAILURE;
                 }
                 break;
-            case 'o':
+            case 'o':  // Baza nazwy plików wyjściowych
                 output_base = optarg;
                 break;
-            case 'b':
+            case 'b':  // Włączenie zapisu binarnego
                 save_binary = 1;
                 break;
-            default:
+            default:  // Nieprawidłowa opcja
                 fprintf(stderr, "Użycie: %s -i <plik_wejsciowy> [-p liczba_podgrafow] [-m margines] [-o baza_wyjscia] [-b]\n", argv[0]);
                 return EXIT_FAILURE;
         }
     }
 
+    // Sprawdzenie obowiązkowego pliku wejściowego
     if (!input_file) {
         fprintf(stderr, "Plik wejściowy jest wymagany (-i <plik>)\n");
         return EXIT_FAILURE;
     }
 
-    // Wczytanie grafu z pliku
+    // Wczytanie grafu z pliku w formacie CSRRG
     csrrg_t *graph_data = parse_csrrg(input_file);
     if (!graph_data) {
         fprintf(stderr, "Błąd wczytywania grafu!\n");
         return EXIT_FAILURE;
     }
 
+    // Konwersja danych CSRRG na strukturę grafu
     graph_t *graph = load_graph_from_csrrg(graph_data);
     if (!graph) {
         fprintf(stderr, "Błąd konwersji grafu!\n");
         return EXIT_FAILURE;
     }
 
-    printf("Dzielenie grafu na %d części...\n", numParts);
+    printf("\nDzielenie grafu na %d części...\n", numParts);
 
+    // Podział grafu metodą spektralną
     partition_t partition = spectral_partition(graph, numParts);
+
+    // Ewaluacja jakości podziału (np. margines różnicy liczby wierzchołków)
     evaluate_partition(graph, partition, margin);
 
     // Przygotowanie nazw plików wynikowych
@@ -74,14 +81,15 @@ int main(int argc, char *argv[]) {
     snprintf(output_txt, sizeof(output_txt), "%s.txt", output_base);
     snprintf(output_bin, sizeof(output_bin), "%s.bin", output_base);
 
-    // Zapisz wyniki
+    // Zapis wyniku podziału do pliku tekstowego
     save_partition_to_file(output_txt, partition, graph->vertices);
 
+    // Opcjonalny zapis wyniku także do pliku binarnego
     if (save_binary) {
         save_partition_binary(output_bin, partition, graph->vertices);
     }
 
-    // Zwolnienie pamięci
+    // Zwolnienie zaalokowanej pamięci
     free(partition.partition);
     free_graph(graph);
     free(graph_data->vertices);

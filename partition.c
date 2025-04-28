@@ -4,25 +4,17 @@
 #include <math.h>
 
 
-// Create array of indices and values for sorting
-typedef struct {
-    int index;
-    double value;
-} indexed_value;
-
-
 // Funkcja obliczająca macierz Laplace'a grafu
 void compute_laplacian(graph_t *graph, double **laplacian) {
     int V = graph->vertices;
-    printf("V w funkcji compute_laplacian z graph->vertices: %d\n", V);
-    int *degree = (int *)calloc(V, sizeof(int));
+    int *degree = (int *)calloc(V, sizeof(int));  // Stopnie wierzchołków
 
     if (!degree) {
         fprintf(stderr, "Błąd alokacji pamięci dla stopni wierzchołków\n");
         exit(EXIT_FAILURE);
     }
 
-    // Obliczanie stopni wierzchołków
+    // Liczenie liczby krawędzi wychodzących z każdego wierzchołka
     for (int i = 0; i < V; i++) {
         for (int j = graph->edgeIndices[i]; j < graph->edgeIndices[i + 1]; j++) {
             degree[i]++;
@@ -36,20 +28,18 @@ void compute_laplacian(graph_t *graph, double **laplacian) {
         }
     }
 
-    // Tworzenie macierzy Laplace'a
-    printf("Jestem przed pętlą, adjacencyCount mamy taki: %d\n", graph->adjacencyCount);
+    // Wypełnianie macierzy Laplace'a
     for (int i = 0; i < V; i++) {
-        laplacian[i][i] = degree[i];
+        laplacian[i][i] = degree[i];  // Wartości na przekątnej = stopnie
         for (int j = graph->edgeIndices[i]; j < graph->edgeIndices[i + 1]; j++) {
-            if(j == graph->adjacencyCount) return;
+            if (j == graph->adjacencyCount) return;  // Bezpieczne zakończenie
             int neighbor = graph->adjacency[j];
-            laplacian[i][neighbor] = -1.0;
+            laplacian[i][neighbor] = -1.0;  // Połączenia między wierzchołkami
         }
     }
-    // free(degree);
 }
 
-// Funkcja obliczająca iloczyn macierzy przez wektor
+// Funkcja mnożąca macierz przez wektor
 void mat_vec_multiply(double **matrix, double *vector, double *result, int V) {
     for (int i = 0; i < V; i++) {
         result[i] = 0.0;
@@ -59,7 +49,7 @@ void mat_vec_multiply(double **matrix, double *vector, double *result, int V) {
     }
 }
 
-// Funkcja obliczająca normę wektora
+// Funkcja licząca normę (długość) wektora
 double norm(double *vector, int V) {
     double sum = 0.0;
     for (int i = 0; i < V; i++) {
@@ -68,56 +58,46 @@ double norm(double *vector, int V) {
     return sqrt(sum);
 }
 
+// // Funkcja pomocnicza do qsort: porównywanie wartości zmiennoprzecinkowych
+// static int compare_doubles(const void *a, const void *b) {
+//     double diff = *(const double*)a - *(const double*)b;
+//     return (diff > 0) - (diff < 0);
+// }
 
-// Helper function for qsort
-static int compare_doubles(const void *a, const void *b) {
-    double diff = *(const double*)a - *(const double*)b;
-    return (diff > 0) - (diff < 0);
-}
-
+// Funkcja obliczająca przybliżony wektor własny (Fiedlera) metodą iteracji potęgowej
 double* compute_fiedler_vector(double **laplacian, int V) {
-    // Initialize vectors
-    double *x = (double *)calloc(V, sizeof(double));
-    double *prev_x = (double *)calloc(V, sizeof(double));
-    double *Ax = (double *)calloc(V, sizeof(double));
-    
+    double *x = (double *)calloc(V, sizeof(double));     // Wektor początkowy
+    double *prev_x = (double *)calloc(V, sizeof(double)); // Poprzedni wektor
+    double *Ax = (double *)calloc(V, sizeof(double));     // Wynik mnożenia
+
     if (!x || !prev_x || !Ax) {
         fprintf(stderr, "Memory allocation failed in compute_fiedler_vector\n");
         exit(1);
     }
 
-    // Initialize x with random values
+    // Losowa inicjalizacja wektora x
     for (int i = 0; i < V; i++) {
         x[i] = (double)rand() / RAND_MAX - 0.5;
     }
 
-    // Power iteration method
+    // Iteracyjne przybliżanie
     double epsilon = 1e-10;
     int max_iter = 1000;
-    
     for (int iter = 0; iter < max_iter; iter++) {
-        // Store previous vector
         memcpy(prev_x, x, V * sizeof(double));
-        
-        // Compute Ax
         mat_vec_multiply(laplacian, x, Ax, V);
-        
-        // Normalize
-        double norm = 0.0;
-        for (int i = 0; i < V; i++) {
-            norm += Ax[i] * Ax[i];
-        }
-        norm = sqrt(norm);
-        
-        if (norm < epsilon) {
+
+        // Normalizacja wyniku
+        double norm_val = norm(Ax, V);
+        if (norm_val < epsilon) {
             break;
         }
-        
+
         for (int i = 0; i < V; i++) {
-            x[i] = Ax[i] / norm;
+            x[i] = Ax[i] / norm_val;
         }
-        
-        // Check convergence
+
+        // Sprawdzenie zbieżności
         double diff = 0.0;
         for (int i = 0; i < V; i++) {
             diff += (x[i] - prev_x[i]) * (x[i] - prev_x[i]);
@@ -126,13 +106,13 @@ double* compute_fiedler_vector(double **laplacian, int V) {
             break;
         }
     }
-    
+
     free(prev_x);
     free(Ax);
     return x;
 }
 
-// Add this comparison function before spectral_partition
+// Funkcja pomocnicza do sortowania indeksowanych wartości
 static int compare_indexed_values(const void *a, const void *b) {
     indexed_value *va = (indexed_value*)a;
     indexed_value *vb = (indexed_value*)b;
@@ -141,11 +121,11 @@ static int compare_indexed_values(const void *a, const void *b) {
     return 0;
 }
 
-
+// Funkcja dzieląca graf na numParts części metodą spektralną
 partition_t spectral_partition(graph_t *graph, int numParts) {
     int V = graph->vertices;
 
-    // Allocate and compute Laplacian matrix
+    // Alokacja i obliczenie macierzy Laplace'a
     double **laplacian = (double **)malloc(V * sizeof(double *));
     if (!laplacian) {
         fprintf(stderr, "Memory allocation failed\n");
@@ -162,23 +142,22 @@ partition_t spectral_partition(graph_t *graph, int numParts) {
     compute_laplacian(graph, laplacian);
     double *fiedler = compute_fiedler_vector(laplacian, V);
 
-
+    // Przygotowanie tablicy indeksowanych wartości
     indexed_value *values = malloc(V * sizeof(indexed_value));
     if (!values) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(1);
     }
 
-    // Initialize array with indices and values
     for (int i = 0; i < V; i++) {
         values[i].index = i;
         values[i].value = fiedler[i];
     }
 
-    // Sort based on Fiedler values
+    // Sortowanie według wartości Fiedlera
     qsort(values, V, sizeof(indexed_value), compare_indexed_values);
 
-    // Initialize partition
+    // Inicjalizacja podziału
     partition_t partition;
     partition.partition = (int *)malloc(V * sizeof(int));
     if (!partition.partition) {
@@ -187,11 +166,10 @@ partition_t spectral_partition(graph_t *graph, int numParts) {
     }
     partition.numParts = numParts;
 
-    // Calculate vertices per partition
+    // Podział na części równoliczne
     int base_size = V / numParts;
     int remainder = V % numParts;
 
-    // Assign vertices to partitions ensuring balanced sizes
     int current_pos = 0;
     for (int p = 0; p < numParts; p++) {
         int part_size = base_size + (p < remainder ? 1 : 0);
@@ -201,7 +179,7 @@ partition_t spectral_partition(graph_t *graph, int numParts) {
         current_pos += part_size;
     }
 
-    // Cleanup
+    // Zwolnienie pamięci pomocniczej
     free(values);
     free(fiedler);
     for (int i = 0; i < V; i++) {
@@ -212,11 +190,11 @@ partition_t spectral_partition(graph_t *graph, int numParts) {
     return partition;
 }
 
+// Funkcja ewaluująca jakość podziału grafu
 void evaluate_partition(graph_t *graph, partition_t partition, double margin) {
     int V = graph->vertices;
     int numParts = partition.numParts;
 
-    // Tablica: liczba wierzchołków w każdej części
     int *partVertices = (int *)calloc(numParts, sizeof(int));
     if (!partVertices) {
         fprintf(stderr, "Memory allocation failed in evaluate_partition\n");
@@ -225,6 +203,7 @@ void evaluate_partition(graph_t *graph, partition_t partition, double margin) {
 
     int cutEdges = 0;
 
+    // Liczenie wierzchołków w każdej części i przeciętych krawędzi
     for (int i = 0; i < V; i++) {
         int part = partition.partition[i];
         if (part < 0 || part >= numParts) {
@@ -233,10 +212,9 @@ void evaluate_partition(graph_t *graph, partition_t partition, double margin) {
             return;
         }
         partVertices[part]++;
-        if (i + 1 >= V || graph->edgeIndices[i] < 0) {
-            continue;
-        }
-        // Liczenie przeciętych krawędzi
+
+        if (i + 1 >= V || graph->edgeIndices[i] < 0) continue;
+
         for (int j = graph->edgeIndices[i]; j < graph->edgeIndices[i + 1] && j < graph->adjacencyCount; j++) {
             int neighbor = graph->adjacency[j];
             if (neighbor >= 0 && neighbor < V) {
@@ -247,22 +225,23 @@ void evaluate_partition(graph_t *graph, partition_t partition, double margin) {
         }
     }
 
-    cutEdges /= 2; // Bo liczymy każdą przeciętą krawędź dwa razy
+    cutEdges /= 2;  // Liczymy każdą przeciętą krawędź tylko raz
 
     printf("\n===== Ewaluacja podziału =====\n");
     printf("Liczba przeciętych krawędzi: %d\n", cutEdges);
+
+    double idealVertices = (double)V / numParts;
+    double allowedDeviation = (margin / 100.0) * idealVertices;
 
     for (int p = 0; p < numParts; p++) {
         double percentage = (partVertices[p] * 100.0) / V;
         printf("Część %d: %d wierzchołków (%.2f%%)\n", p, partVertices[p], percentage);
     }
 
-    // Można dodać jeszcze sprawdzenie równomierności podziału
-    double idealShare = 100.0 / numParts;
+    // Sprawdzanie marginesu
     int ok = 1;
     for (int p = 0; p < numParts; p++) {
-        double percentage = (partVertices[p] * 100.0) / V;
-        if (fabs(percentage - idealShare) > margin) {
+        if (fabs(partVertices[p] - idealVertices) > allowedDeviation) {
             ok = 0;
         }
     }

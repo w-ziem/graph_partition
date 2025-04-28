@@ -9,6 +9,13 @@ typedef struct {
     int numParts;   // Liczba części (tu: 2)
 } partition_t;
 
+// Struktura pomocnicza: indeks + wartość wektora (do sortowania Fiedlera)
+typedef struct {
+    int index;
+    double value;
+} indexed_value;
+
+
 // Funkcja obliczająca macierz Laplace'a
 void compute_laplacian(graph_t *graph, double **laplacian);
 
