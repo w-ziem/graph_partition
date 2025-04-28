@@ -146,5 +146,36 @@ void save_partition_to_file(const char *filename, partition_t partition, int ver
 
     fclose(file);
 }
+// Funkcja zapisująca podział binarnie
+void save_partition_binary(const char *filename, partition_t partition, int vertices) {
+    FILE *file = fopen(filename, "wb");
+    if (!file) {
+        perror("fopen");
+        return;
+    }
+
+    uint8_t byte = 0;
+    int bit_pos = 0;
+
+    for (int i = 0; i < vertices; i++) {
+        if (partition.partition[i]) {
+            byte |= (1 << bit_pos);
+        }
+        bit_pos++;
+
+        if (bit_pos == 8) {
+            fwrite(&byte, sizeof(uint8_t), 1, file);
+            byte = 0;
+            bit_pos = 0;
+        }
+    }
+
+    // Zapisz resztkę bajtu, jeśli wierzchołków nie było wielokrotnością 8
+    if (bit_pos > 0) {
+        fwrite(&byte, sizeof(uint8_t), 1, file);
+    }
+
+    fclose(file);
+}
 
 

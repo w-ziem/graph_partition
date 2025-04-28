@@ -10,4 +10,6 @@ csrrg_t* parse_csrrg(const char *filename);
 // Funkcja zapisująca wyniki podziału grafu do pliku
 void save_partition_to_file(const char *filename, partition_t partition, int vertices);
 
+void save_partition_binary(const char *filename, partition_t partition, int vertices);
+
 #endif // IO_H

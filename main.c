@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
 
     // Zapisanie wyniku podziału do pliku
     save_partition_to_file("wynik_podzialu.txt", partition, graph->vertices);
+    save_partition_binary("partition.bin", partition, graph->vertices);
 
     // Zwolnienie pamięci
     free(partition.partition);
