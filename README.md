@@ -8,7 +8,7 @@ Co trzeba zrobić na ten moment, żeby w ogóle coś oddać:
 
 -----Pon 28.04 19:38----- 
 DONE - dodać obsługe argumentów wywołania (flag getopt), żeby mógł dzielić na więcej części
-DONE (nie wiem jeszcze jak zweryfikowac poprawnosc tego binarnego ale wazne ze cos jest)- zapis do pliku tekstowo i binarnie
+DONE - (nie wiem jeszcze jak zweryfikowac poprawnosc tego binarnego ale wazne ze cos jest)- zapis do pliku tekstowo i binarnie
 
 
 - ogarnąć segfaulta o którym wyżej
