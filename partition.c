@@ -3,6 +3,14 @@
 #include <stdio.h>
 #include <math.h>
 
+
+// Create array of indices and values for sorting
+typedef struct {
+    int index;
+    double value;
+} indexed_value;
+
+
 // Funkcja obliczająca macierz Laplace'a grafu
 void compute_laplacian(graph_t *graph, double **laplacian) {
     int V = graph->vertices;
@@ -124,10 +132,20 @@ double* compute_fiedler_vector(double **laplacian, int V) {
     return x;
 }
 
+// Add this comparison function before spectral_partition
+static int compare_indexed_values(const void *a, const void *b) {
+    indexed_value *va = (indexed_value*)a;
+    indexed_value *vb = (indexed_value*)b;
+    if (va->value < vb->value) return -1;
+    if (va->value > vb->value) return 1;
+    return 0;
+}
+
 
 partition_t spectral_partition(graph_t *graph, int numParts) {
     int V = graph->vertices;
 
+    // Allocate and compute Laplacian matrix
     double **laplacian = (double **)malloc(V * sizeof(double *));
     if (!laplacian) {
         fprintf(stderr, "Memory allocation failed\n");
@@ -144,26 +162,23 @@ partition_t spectral_partition(graph_t *graph, int numParts) {
     compute_laplacian(graph, laplacian);
     double *fiedler = compute_fiedler_vector(laplacian, V);
 
-    // Sortowanie wartości Fiedlera
-    double *sorted = (double *)malloc(V * sizeof(double));
-    memcpy(sorted, fiedler, V * sizeof(double));
-    qsort(sorted, V, sizeof(double), compare_doubles);
 
-    // Wyznaczanie progów dla zadanej liczby części
-    double *thresholds = NULL;
-    if (numParts > 1) {
-        thresholds = (double *)malloc((numParts - 1) * sizeof(double));
-        if (!thresholds) {
-            fprintf(stderr, "Memory allocation failed for thresholds\n");
-            exit(1);
-        }
-        for (int i = 1; i < numParts; i++) {
-            thresholds[i-1] = sorted[(i * V) / numParts];
-        }
+    indexed_value *values = malloc(V * sizeof(indexed_value));
+    if (!values) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
     }
 
-    free(sorted);
+    // Initialize array with indices and values
+    for (int i = 0; i < V; i++) {
+        values[i].index = i;
+        values[i].value = fiedler[i];
+    }
 
+    // Sort based on Fiedler values
+    qsort(values, V, sizeof(indexed_value), compare_indexed_values);
+
+    // Initialize partition
     partition_t partition;
     partition.partition = (int *)malloc(V * sizeof(int));
     if (!partition.partition) {
@@ -172,27 +187,30 @@ partition_t spectral_partition(graph_t *graph, int numParts) {
     }
     partition.numParts = numParts;
 
-    for (int i = 0; i < V; i++) {
-        int p = 0;
-        while (p < numParts - 1 && fiedler[i] >= thresholds[p]) {
-            p++;
+    // Calculate vertices per partition
+    int base_size = V / numParts;
+    int remainder = V % numParts;
+
+    // Assign vertices to partitions ensuring balanced sizes
+    int current_pos = 0;
+    for (int p = 0; p < numParts; p++) {
+        int part_size = base_size + (p < remainder ? 1 : 0);
+        for (int i = 0; i < part_size; i++) {
+            partition.partition[values[current_pos + i].index] = p;
         }
-        partition.partition[i] = p;
+        current_pos += part_size;
     }
 
-    if (numParts > 1) {
-        free(thresholds);
+    // Cleanup
+    free(values);
+    free(fiedler);
+    for (int i = 0; i < V; i++) {
+        free(laplacian[i]);
     }
-    // free(fiedler);
-    // for (int i = 0; i < V; i++) {
-    //     free(laplacian[i]);
-    // }
     free(laplacian);
 
     return partition;
 }
-
-
 
 void evaluate_partition(graph_t *graph, partition_t partition, double margin) {
     int V = graph->vertices;
