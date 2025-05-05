@@ -17,12 +17,12 @@ typedef struct {
 
 
 // Funkcja obliczająca macierz Laplace'a
-void compute_laplacian(graph_t *graph, double **laplacian);
+void compute_laplacian(graph_t *graph, double *laplacian);
 
 // Funkcja znajdująca drugi najmniejszy wektor własny macierzy Laplace'a
-double* compute_fiedler_vector(double **laplacian, int vertices);
+double* compute_fiedler_vector(double *laplacian, int vertices);
 
-// Funkcja dzieląca graf na dwie części na podstawie wektora Fiedlera
+// Funkcja dzieląca graf na numParts części metodą spektralną
 partition_t spectral_partition(graph_t *graph, int numParts);
 
 // Funkcja oceniająca podział grafu

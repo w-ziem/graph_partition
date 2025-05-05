@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O2
+CFLAGS = -Wall -Wextra -O2 -fopenmp -march=native -flto
+LDFLAGS = -lm -fopenmp
 
 SRC = graph.c error_handling.c io.c partition.c main.c
 OBJ = $(SRC:.c=.o)
@@ -13,7 +14,7 @@ TEST_EXEC = test_graph_partition
 all: $(EXEC)
 
 $(EXEC): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) 
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lm 
 
 # Cel do kompilacji testu
 test: $(TEST_EXEC)
@@ -25,6 +26,6 @@ $(TEST_EXEC): $(TEST_OBJ)
 	$(CC) $(CFLAGS) -c $< -o $@ -g
 
 clean:
-	rm -f $(OBJ) $(TEST_OBJ) $(EXEC) $(TEST_EXEC)
+	rm -f $(OBJ) $(TEST_OBJ) $(EXEC) $(TEST_EXEC) wynik_podzialu.*
 
 .PHONY: all clean test
